@@ -50,6 +50,12 @@ a{color:var(--accent)}
 .kpis b{display:block;font-family:var(--f-display);font-size:1.3rem;line-height:1.1;font-variant-numeric:tabular-nums}
 .kpis span{font-size:.75rem;color:var(--muted)}
 .kpis .late b{color:var(--late)}
+.kpis .kpi{font:inherit;color:inherit;text-align:left;border:0;background:transparent;border-radius:8px;padding:6px;margin:-6px;cursor:pointer}
+.kpis .kpi:hover{background:var(--seg)}
+.todo.hl{background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:inset 3px 0 0 var(--c)}
+@media (prefers-reduced-motion:no-preference){.todo.hl{animation:hlpulse 1.6s ease-out 1}}
+@keyframes hlpulse{0%{background:color-mix(in srgb,var(--c) 45%,transparent)}100%{background:color-mix(in srgb,var(--c) 16%,transparent)}}
+.sheet .lead{margin:0;font-size:.85rem;color:var(--muted)}
 .prog{height:5px;background:var(--seg);border-radius:3px;overflow:hidden;margin-top:6px}
 .prog i{display:block;height:100%;background:var(--c,var(--accent));border-radius:3px}
 
@@ -265,10 +271,10 @@ a{color:var(--accent)}
       <h1>План івенту 31.10</h1>
     </div>
     <div class="card kpis">
-      <div><b id="kDays">—</b><span>днів до івенту</span></div>
-      <div><b id="kDone">—</b><span>виконано</span></div>
-      <div><b id="kNow">—</b><span>можна запускати</span></div>
-      <div class="late"><b id="kLate">—</b><span>прострочено</span></div>
+      <button type="button" class="kpi" data-k="event"><b id="kDays">—</b><span>днів до івенту</span></button>
+      <button type="button" class="kpi" data-k="done"><b id="kDone">—</b><span>виконано</span></button>
+      <button type="button" class="kpi" data-k="now"><b id="kNow">—</b><span>можна запускати</span></button>
+      <button type="button" class="kpi late" data-k="late"><b id="kLate">—</b><span>прострочено</span></button>
       <div style="grid-column:1/-1"><div class="prog" style="--c:var(--done)"><i id="kBar" style="width:0"></i></div></div>
     </div>
     <div class="card mini-card">
@@ -544,7 +550,7 @@ function renderTimeline(start,days,dw,lw,isWeek){
 }
 
 /* ---------- день ---------- */
-function todoRow(t,day,grouped){
+function todoRow(t,day,grouped,onPick){
   const st=status(t);
   const b=el("button","todo"+(st==="done"?" done":"")+(st==="late"?" late":""));b.type="button";b.style.setProperty("--c",color(t.owner));
   const ck=el("span","ck",st==="done"?"✓":"");ck.setAttribute("aria-hidden","true");b.appendChild(ck);
@@ -559,7 +565,8 @@ function todoRow(t,day,grouped){
   if(st!=="done")t.blockers.forEach(x=>m.appendChild(el("span","blk","Чекає: "+x)));
   b.appendChild(m);
   b.setAttribute("aria-label",(st==="done"?"Виконано: ":"")+t.title+", "+t.owner);
-  b.onclick=()=>openSheet(t);
+  b.onclick=()=>(onPick?onPick(t):openSheet(t));
+  b.dataset.task=t.id+"|"+t.title;
   return b;
 }
 function renderDay(){
@@ -688,7 +695,7 @@ function renderTeam(){
   if(!g.children.length)g.appendChild(el("div","tl-empty","Даних поки немає."));
   host.appendChild(g);
 }
-function openPerson(o){
+function openPerson(o,hl,back){
   const s=stats(o);
   const sh=document.getElementById("sheet");sh.innerHTML="";sh.className="sheet wide";sh.style.setProperty("--c",color(o));
   const top=el("div","top");const h=el("div");
@@ -696,6 +703,7 @@ function openPerson(o){
   const h3=el("h3",null,"Прогрес: "+o);h3.id="shTitle";h.appendChild(h3);top.appendChild(h);
   const x=el("button","icon-btn","✕");x.type="button";x.setAttribute("aria-label","Закрити");x.onclick=closeSheet;top.appendChild(x);
   sh.appendChild(top);
+  if(back){const bk=el("button","btn2","← "+back.label);bk.type="button";bk.onclick=back.go;sh.insertBefore(bk,top);}
   const ph=el("div","ps-head");ph.appendChild(ring(s.p,true));
   const pt=el("div");pt.appendChild(el("div","big",s.c.done+" / "+s.total));pt.appendChild(el("div","pc-cnt","задач виконано"));pt.appendChild(paceEl(s));ph.appendChild(pt);
   sh.appendChild(ph);
@@ -719,8 +727,35 @@ function openPerson(o){
   const go=el("button","btn2","Показати лише його задачі в календарі");go.type="button";
   go.onclick=()=>{S.sel=new Set([o]);S.mode="cal";saveMode();closeSheet();S.scrollTo=true;render();};
   sh.appendChild(go);
-  document.getElementById("sheetBg").hidden=false;x.focus();
+  document.getElementById("sheetBg").hidden=false;sh.scrollTop=0;x.focus({preventScroll:true});
+  if(hl){
+    const row=[...sh.querySelectorAll(".todo")].find(r=>r.dataset.task===hl.id+"|"+hl.title);
+    if(row){row.classList.add("hl");requestAnimationFrame(()=>row.scrollIntoView({block:"center"}));}
+  }
 }
+/* ---------- списки з лічильників ---------- */
+const KPI={
+  event:{title:"Задачі дня івенту",lead:"Усе, що має статися 31 жовтня, включно з виконаним.",pick:t=>{const d=dateOf(t);return same(d,EVENT)||stageOf(t)===6;}},
+  done:{title:"Виконано",lead:"Задачі, позначені виконаними в Trello.",pick:t=>t.complete},
+  now:{title:"Можна запускати",lead:"Нічого не блокує — можна братися вже зараз.",pick:t=>status(t)==="now"},
+  late:{title:"Прострочено",lead:"Строк минув, а задача ще не виконана.",pick:t=>status(t)==="late"}
+};
+function openList(k){
+  const c=KPI[k];const list=visible().filter(c.pick).sort((a,b)=>dateOf(a)-dateOf(b)||sortKey(a)-sortKey(b));
+  const sh=document.getElementById("sheet");sh.innerHTML="";sh.className="sheet wide";sh.style.removeProperty("--c");
+  const top=el("div","top");const h=el("div");
+  h.appendChild(el("div","bid",S.sel.size?"Вибрані: "+[...S.sel].join(", "):"Уся команда"));
+  const h3=el("h3",null,c.title+" · "+list.length);h3.id="shTitle";h.appendChild(h3);top.appendChild(h);
+  const x=el("button","icon-btn","✕");x.type="button";x.setAttribute("aria-label","Закрити");x.onclick=closeSheet;top.appendChild(x);
+  sh.appendChild(top);
+  sh.appendChild(el("p","lead",c.lead+" Натисніть задачу, щоб перейти до відповідального."));
+  const l=el("div","dlist");
+  if(!list.length)l.appendChild(el("div","dempty","Тут поки порожньо."));
+  list.forEach(t=>l.appendChild(todoRow(t,null,false,t=>openPerson(t.owner,t,{label:"Назад: "+c.title.toLowerCase(),go:()=>openList(k)}))));
+  sh.appendChild(l);
+  document.getElementById("sheetBg").hidden=false;sh.scrollTop=0;x.focus({preventScroll:true});
+}
+document.querySelectorAll(".kpis .kpi").forEach(b=>b.onclick=()=>openList(b.dataset.k));
 
 /* ---------- деталі ---------- */
 function openSheet(t){
