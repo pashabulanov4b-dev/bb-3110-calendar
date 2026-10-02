@@ -374,6 +374,16 @@ const longDay=(d,y)=>fmt(d,{weekday:"long"})+", "+fmt(d,y?{day:"numeric",month:"
 
 /* ---------- дані ---------- */
 function parseDesc(desc){const o={};(desc||"").split("\n").forEach(l=>{const m=l.match(/^([^:]{2,40}):\s*(.*)$/);if(m)o[m[1].trim()]=m[2].trim();});return o;}
+// Початок задачі: дата старту з Trello або діапазон у рядку «Строк:» («28–30.10», «28.10–30.10»)
+function startOf(c,dueText){
+  if(c.start)return dayStart(new Date(c.start));
+  const t=(dueText||"").trim();
+  let m=t.match(/^(\d{1,2})\s*[–-]\s*\d{1,2}\.(\d{1,2})/);
+  if(m)return new Date(2026,+m[2]-1,+m[1]);
+  m=t.match(/^(\d{1,2})\.(\d{1,2})\s*[–-]\s*\d{1,2}\.\d{1,2}/);
+  if(m)return new Date(2026,+m[2]-1,+m[1]);
+  return null;
+}
 function fromTrello(payload){
   const nodes=(payload&&payload.cards&&payload.cards.nodes)||[];
   return nodes.filter(c=>!c.closed).map(c=>{
@@ -384,7 +394,7 @@ function fromTrello(payload){
     if(ln[2]) ROLES[owner]=ln[2];
     const blk=d["Чиє рішення потрібне"]||"";
     return {id:m?m[1]+"."+m[2]:"",title:m?m[3]:(c.name||"Без назви"),owner,result:d["Результат"]||"",
-      due:c.due||null,dueText:d["Строк"]||"",deps:d["Залежить від"]||"—",statusText:d["Статус"]||"",
+      due:c.due||null,dueText:d["Строк"]||"",start:startOf(c,d["Строк"]),deps:d["Залежить від"]||"—",statusText:d["Статус"]||"",
       blockers:blk?[blk]:[],complete:!!(c.complete||c.dueComplete),url:c.webUrl||c.url||BOARD,
       personalUrl:c.personalUrl||null,personalOnly:!!c.personalOnly,doneOn:c.doneOn||[]};
   });
@@ -400,7 +410,7 @@ function status(t){
 function stageOf(t){const n=parseInt(t.id,10);return STAGES[n]?n:0;}
 function span(t){
   const st=STAGES[stageOf(t)];
-  let s=st?ymd(st.s):null, e=t.due?dayStart(new Date(t.due)):(st?ymd(st.e):null);
+  let s=t.start||(st?ymd(st.s):null), e=t.due?dayStart(new Date(t.due)):(st?ymd(st.e):null);
   if(!s) s=e; if(!e) e=s; if(!s){s=e=dayStart(new Date());}
   if(e<s) s=e;
   return {s,e};

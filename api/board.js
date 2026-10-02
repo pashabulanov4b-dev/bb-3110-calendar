@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
 
   let lists;
   try {
-    lists = await get("/boards/" + encodeURIComponent(board) + "/lists?filter=open&fields=name,pos&cards=open&card_fields=name,desc,due,dueComplete,closed,shortUrl,url,dateLastActivity");
+    lists = await get("/boards/" + encodeURIComponent(board) + "/lists?filter=open&fields=name,pos&cards=open&card_fields=name,desc,due,dueComplete,start,closed,shortUrl,url,dateLastActivity");
   } catch (e) {
     res.statusCode = 502;
     const hint = e.status === 401
@@ -83,7 +83,7 @@ module.exports = async function handler(req, res) {
     const mine = boards.filter((b) => b.name && b.name.startsWith(prefix) && b.shortLink !== board);
     personal = await Promise.all(mine.map(async (b) => {
       try {
-        const cards = await get("/boards/" + b.shortLink + "/cards?filter=open&fields=name,desc,due,dueComplete,closed,shortUrl,url,dateLastActivity");
+        const cards = await get("/boards/" + b.shortLink + "/cards?filter=open&fields=name,desc,due,dueComplete,start,closed,shortUrl,url,dateLastActivity");
         return { owner: b.name.slice(prefix.length).trim(), url: b.url, cards };
       } catch (e) {
         warnings.push("Дошка «" + b.name + "» не прочиталась (" + (e.status || "мережа") + ").");
@@ -103,6 +103,7 @@ module.exports = async function handler(req, res) {
         name: c.name,
         desc: c.desc || "",
         due: c.due || null,
+        start: c.start || null,
         dueComplete: !!c.dueComplete,
         complete: isDone(c),
         closed: !!c.closed,
