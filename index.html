@@ -32,6 +32,7 @@
   --p-pasha:#9d92ff; --p-rodion:#fb923c; --p-liza:#f472b6; --p-vova:#facc15; --p-leon:#a3e635;
   --p-simon:#2dd4bf; --p-max:#60a5fa; --p-yarik:#c084fc; --p-arkasha:#22d3ee; --p-other:#a29db0; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:16px 40px}
 button{font:inherit;color:inherit}
 a{color:var(--accent)}
@@ -596,6 +597,7 @@ async function load(manual){
     const j=await r.json().catch(()=>null);
     if(!r.ok||!j||!Array.isArray(j.lists)){
       const msg=(j&&j.error)||("Сервер відповів помилкою ("+r.status+").");
+      if(source!=="live")showGate("Пароль прийнято, але дані не завантажились: "+msg);
       setSync(source==="live"?"stale":"off",msg+(source==="live"?" Показую останні дані.":""));return;
     }
     const nodes=j.lists.flatMap(l=>l.cards.map(c=>Object.assign({},c,{list:{name:l.name},webUrl:c.url})));
@@ -603,6 +605,7 @@ async function load(manual){
     const t=new Date(j.fetchedAt||Date.now()).toLocaleTimeString("uk-UA",{hour:"2-digit",minute:"2-digit"});
     setSync("live","Trello · оновлено о "+t+". Автооновлення щохвилини.");
   }catch(e){
+    if(source!=="live")showGate("Немає з’єднання із сервером. Спробуйте ще раз.");
     setSync(source==="live"?"stale":"off","Немає з’єднання із сервером."+(source==="live"?" Показую останні дані.":""));
   }finally{loading=false;}
 }

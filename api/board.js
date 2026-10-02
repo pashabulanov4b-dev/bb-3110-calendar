@@ -41,7 +41,8 @@ module.exports = async function handler(req, res) {
         : r.status === 404
           ? "Trello не знайшов дошку — перевірте доступ токена до дошки «31.10»."
           : "Trello відповів помилкою " + r.status + ".";
-      return res.end(JSON.stringify({ error: hint }));
+      const body = await r.text().catch(() => "");
+      return res.end(JSON.stringify({ error: hint + (body ? " (" + body.slice(0, 120) + ")" : "") }));
     }
     const lists = await r.json();
     const out = lists
@@ -62,6 +63,6 @@ module.exports = async function handler(req, res) {
     return res.end(JSON.stringify({ lists: out, fetchedAt: new Date().toISOString() }));
   } catch (e) {
     res.statusCode = 502;
-    return res.end(JSON.stringify({ error: "Не вдалося з’єднатися з Trello." }));
+    return res.end(JSON.stringify({ error: "Не вдалося з’єднатися з Trello: " + (e && e.message ? e.message : "") }));
   }
 };
