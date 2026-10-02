@@ -377,7 +377,8 @@ function fromTrello(payload){
     const blk=d["Чиє рішення потрібне"]||"";
     return {id:m?m[1]+"."+m[2]:"",title:m?m[3]:(c.name||"Без назви"),owner,result:d["Результат"]||"",
       due:c.due||null,dueText:d["Строк"]||"",deps:d["Залежить від"]||"—",statusText:d["Статус"]||"",
-      blockers:blk?[blk]:[],complete:!!(c.complete||c.dueComplete),url:c.webUrl||c.url||BOARD};
+      blockers:blk?[blk]:[],complete:!!(c.complete||c.dueComplete),url:c.webUrl||c.url||BOARD,
+      personalUrl:c.personalUrl||null,personalOnly:!!c.personalOnly,doneOn:c.doneOn||[]};
   });
 }
 function status(t){
@@ -738,9 +739,13 @@ function openSheet(t){
   row("Результат",t.result);row("Залежить від",t.deps);
   row("Чиє рішення потрібне",t.blockers.join(", "));
   row("Статус в описі",t.statusText);
+  if(t.complete&&t.doneOn.length)row("Позначено виконаним",t.doneOn.map(x=>x==="спільна"?"на спільній дошці":"на особистій дошці").join(" і "));
   sh.appendChild(dl);
-  const a=el("a","open","Відкрити в Trello ↗");a.href=t.url;a.target="_blank";a.rel="noopener";sh.appendChild(a);
-  sh.appendChild(el("p","note",source==="live"?"Виконання і зміни робляться в Trello — тут оновиться автоматично.":"Дані ще не завантажені."));
+  const links=el("div");links.style.cssText="display:flex;flex-wrap:wrap;gap:8px";
+  const a=el("a","open",t.personalOnly?"Відкрити на особистій дошці ↗":"Спільна дошка ↗");a.href=t.url;a.target="_blank";a.rel="noopener";links.appendChild(a);
+  if(t.personalUrl){const b=el("a","open","Особиста дошка ↗");b.href=t.personalUrl;b.target="_blank";b.rel="noopener";links.appendChild(b);}
+  sh.appendChild(links);
+  sh.appendChild(el("p","note",source!=="live"?"Дані ще не завантажені.":t.personalOnly?"Цієї задачі немає на спільній дошці — вона з особистої дошки "+t.owner+".":"Виконання можна відмітити на будь-якій із дошок — тут оновиться автоматично."));
   document.getElementById("sheetBg").hidden=false;x.focus();
 }
 function closeSheet(){document.getElementById("sheetBg").hidden=true;}
@@ -820,7 +825,9 @@ async function load(manual){
     const nodes=j.lists.flatMap(l=>l.cards.map(c=>Object.assign({},c,{list:{name:l.name},webUrl:c.url})));
     TASKS=fromTrello({cards:{nodes}});source="live";hideGate();render();
     const t=new Date(j.fetchedAt||Date.now()).toLocaleTimeString("uk-UA",{hour:"2-digit",minute:"2-digit"});
-    setSync("live","Trello · оновлено о "+t+". Автооновлення щохвилини.");
+    const np=(j.boards&&j.boards.personal||[]).length;
+    const warn=(j.warnings||[]).join(" ");
+    setSync(warn?"stale":"live","Trello · спільна дошка"+(np?" + "+np+" особист"+(np===1?"а":np<5?"і":"их"):"")+" · оновлено о "+t+"."+(warn?" "+warn:" Автооновлення щохвилини."));
   }catch(e){
     if(source!=="live")showGate("Немає з’єднання із сервером. Спробуйте ще раз.");
     setSync(source==="live"?"stale":"off","Немає з’єднання із сервером."+(source==="live"?" Показую останні дані.":""));
