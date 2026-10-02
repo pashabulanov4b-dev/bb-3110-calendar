@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Bad&amp;Beezy × R22MIE · план 31.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: календар у стилі Apple — ліворуч міні-календар і відповідальні, праворуч перемикач «Весь проєкт / Тиждень / День» і хронологічна пряма з рядками людей */
 :root{
@@ -15,8 +15,8 @@
   --ok:#1f7a4a; --wait:#a35f00; --late:#c3261b; --done:#2f5f9e;
   --p-pasha:#3b2bd1; --p-rodion:#c2410c; --p-liza:#be185d; --p-vova:#a16207; --p-leon:#4d7c0f;
   --p-simon:#0f766e; --p-max:#1d4ed8; --p-yarik:#7e22ce; --p-arkasha:#0e7490; --p-other:#6b6578;
-  --f-display:"Comfortaa",system-ui,sans-serif;
-  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-display:"Dela Gothic One","Arial Black",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -260,6 +260,8 @@ a{color:var(--accent)}
 .gate input{font:inherit;padding:9px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);color:var(--fg)}
 .gate button{font:inherit;font-weight:600;padding:9px 12px;border:0;border-radius:8px;background:var(--accent);color:var(--surface);cursor:pointer}
 .gate .err{color:var(--late);font-size:.85rem;margin:0}
+/* Dela Gothic One має лише одну товщину — не даємо браузеру домальовувати жирність */
+.brand h1,.kpis b,.toolbar h2,.ring b,.ps-head .big,.sheet h3,.gate h1{font-weight:400}
 </style>
 
 </head>
