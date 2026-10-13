@@ -18,10 +18,11 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(ha, hb);
 }
 
-const COPY_NOTE = /\n*Копія\. Основна картка[\s\S]*$/;
+// Примітка копії українською («Копія. Основна картка…») або російською («Копия. Основная карточка…»)
+const COPY_NOTE = /\n*Копі[яи]\. Основн(?:а|ая) карт(?:ка|очка)[\s\S]*$/;
 // Посилання на основну картку в описі копії: «Основна картка … https://trello.com/c/XXXX»
 function mainLink(desc) {
-  const m = String(desc || "").match(/Основна картка[\s\S]*?trello\.com\/c\/([A-Za-z0-9]+)/);
+  const m = String(desc || "").match(/Основн(?:а|ая) карт(?:ка|очка)[\s\S]*?trello\.com\/c\/([A-Za-z0-9]+)/);
   return m ? m[1] : null;
 }
 function shortLink(url) {
