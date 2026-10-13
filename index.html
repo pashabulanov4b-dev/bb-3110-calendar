@@ -14,7 +14,7 @@
   --accent:#3b2bd1; --now:#e5372b; --seg:#e6e4eb; --wkend:#f6f5f8; --today:#fdf1ef; --event:#ece9fd;
   --ok:#1f7a4a; --wait:#a35f00; --late:#c3261b; --done:#2f5f9e;
   --p-pasha:#3b2bd1; --p-rodion:#c2410c; --p-liza:#be185d; --p-vova:#a16207; --p-leon:#4d7c0f;
-  --p-simon:#0f766e; --p-max:#1d4ed8; --p-yarik:#7e22ce; --p-arkasha:#0e7490; --p-other:#6b6578;
+  --p-simon:#0f766e; --p-max:#1d4ed8; --p-other:#6b6578;
   --f-display:"Dela Gothic One","Arial Black",system-ui,sans-serif;
   --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -24,13 +24,13 @@
   --accent:#9d92ff; --now:#ff5a4e; --seg:#26232e; --wkend:#18161e; --today:#2a1716; --event:#221f3a;
   --ok:#6fd39c; --wait:#f0b25a; --late:#ff8a7a; --done:#8ab6f0;
   --p-pasha:#9d92ff; --p-rodion:#fb923c; --p-liza:#f472b6; --p-vova:#facc15; --p-leon:#a3e635;
-  --p-simon:#2dd4bf; --p-max:#60a5fa; --p-yarik:#c084fc; --p-arkasha:#22d3ee; --p-other:#a29db0; color-scheme:dark}}
+  --p-simon:#2dd4bf; --p-max:#60a5fa; --p-other:#a29db0; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121017; --surface:#1b1822; --surface2:#16141c; --fg:#ecebf1; --muted:#a29db0; --line:#2a2733; --line2:#3a3645;
   --accent:#9d92ff; --now:#ff5a4e; --seg:#26232e; --wkend:#18161e; --today:#2a1716; --event:#221f3a;
   --ok:#6fd39c; --wait:#f0b25a; --late:#ff8a7a; --done:#8ab6f0;
   --p-pasha:#9d92ff; --p-rodion:#fb923c; --p-liza:#f472b6; --p-vova:#facc15; --p-leon:#a3e635;
-  --p-simon:#2dd4bf; --p-max:#60a5fa; --p-yarik:#c084fc; --p-arkasha:#22d3ee; --p-other:#a29db0; color-scheme:dark}
+  --p-simon:#2dd4bf; --p-max:#60a5fa; --p-other:#a29db0; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:16px 40px}
@@ -349,7 +349,7 @@ const STAGES={
  7:{name:"Завершення",s:[2026,11,1],e:[2026,11,1]},
  8:{name:"Підсумок",s:[2026,11,2],e:[2026,11,7]}
 };
-const PEOPLE=[["Паша","pasha","Координація"],["Родіон","rodion","Бар і фінанси"],["Ліза","liza","SMM і арт"],["Вова","vova","Світло"],["Леон","leon","Техніка"],["Саймон","simon","Музика"],["Макс","max","Відео"],["Ярік","yarik","Графіка"],["Аркаша","arkasha","Фото"]];
+const PEOPLE=[["Паша","pasha","Координація"],["Родіон","rodion","Бар і фінанси"],["Ліза","liza","SMM і арт"],["Вова","vova","Світло"],["Леон","leon","Техніка"],["Саймон","simon","Музика"],["Макс","max","Відео"]];
 const PKEY=Object.fromEntries(PEOPLE.map(p=>[p[0],p[1]]));
 const LABEL={now:"Можна запускати",wait:"Чекає рішення",plan:"Заплановано",done:"Готово",late:"Прострочено"};
 

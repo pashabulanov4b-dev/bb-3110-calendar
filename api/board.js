@@ -90,7 +90,11 @@ module.exports = async function handler(req, res) {
   let personal = [];
   try {
     const boards = await get("/members/me/boards?filter=open&fields=name,shortLink,url");
-    const mine = boards.filter((b) => b.name && b.name.startsWith(prefix) && b.shortLink !== board);
+    // Особиста дошка враховується, лише якщо в людини є колонка на спільній дошці:
+    // заархівували колонку — людина зникає з календаря разом зі своєю дошкою.
+    const ownerOf = (b) => b.name.slice(prefix.length).trim();
+    const hasColumn = (o) => lists.some((l) => l.name === o || l.name.startsWith(o + " ("));
+    const mine = boards.filter((b) => b.name && b.name.startsWith(prefix) && b.shortLink !== board && hasColumn(ownerOf(b)));
     personal = await Promise.all(mine.map(async (b) => {
       try {
         const cards = await get("/boards/" + b.shortLink + "/cards?filter=open&fields=name,desc,due,dueComplete,start,closed,shortUrl,url,dateLastActivity");
