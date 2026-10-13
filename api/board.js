@@ -19,6 +19,15 @@ function safeEqual(a, b) {
 }
 
 const COPY_NOTE = /\n*Копія\. Основна картка[\s\S]*$/;
+// Посилання на основну картку в описі копії: «Основна картка … https://trello.com/c/XXXX»
+function mainLink(desc) {
+  const m = String(desc || "").match(/Основна картка[\s\S]*?trello\.com\/c\/([A-Za-z0-9]+)/);
+  return m ? m[1] : null;
+}
+function shortLink(url) {
+  const m = String(url || "").match(/trello\.com\/c\/([A-Za-z0-9]+)/);
+  return m ? m[1] : null;
+}
 function taskId(name) {
   const m = String(name || "").match(/^\s*(\d+\.\d+)\s*·/);
   return m ? m[1] : null;
@@ -114,12 +123,20 @@ module.exports = async function handler(req, res) {
     }));
 
   const byId = new Map();
-  out.forEach((l) => l.cards.forEach((c) => { const id = taskId(c.name); if (id && !byId.has(id)) byId.set(id, c); }));
+  const byLink = new Map();
+  out.forEach((l) => l.cards.forEach((c) => {
+    const id = taskId(c.name); if (id && !byId.has(id)) byId.set(id, c);
+    const sl = shortLink(c.url); if (sl) byLink.set(sl, c);
+  }));
 
   personal.forEach((p) => {
     p.cards.forEach((pc) => {
-      const id = taskId(pc.name);
-      const shared = id ? byId.get(id) : null;
+      // Спершу — за посиланням на основну картку (переживає перейменування),
+      // інакше — за номером задачі в назві.
+      const link = mainLink(pc.desc);
+      let shared = link ? byLink.get(link) : null;
+      if (!shared && link) return; // основну картку архівовано або видалено — стару копію не показуємо
+      if (!shared) { const id = taskId(pc.name); shared = id ? byId.get(id) : null; }
       if (shared) {
         shared.personalUrl = pc.shortUrl || pc.url;
         shared.personalBoard = p.owner;

@@ -407,7 +407,16 @@ function status(t){
   if(s.includes("чека")) return "wait";
   return "plan";
 }
-function stageOf(t){const n=parseInt(t.id,10);return STAGES[n]?n:0;}
+// Етап — за дедлайном у Trello; якщо дедлайну немає — за номером у назві картки.
+function stageOf(t){
+  if(t.due){
+    const d=dayStart(new Date(t.due));
+    if(d<ymd(STAGES[1].s))return 1;
+    for(const n in STAGES){if(d>=ymd(STAGES[n].s)&&d<=ymd(STAGES[n].e))return +n;}
+    if(d>ymd(STAGES[8].e))return 8;
+  }
+  const n=parseInt(t.id,10);return STAGES[n]?n:0;
+}
 function span(t){
   const st=STAGES[stageOf(t)];
   let s=t.start||(st?ymd(st.s):null), e=t.due?dayStart(new Date(t.due)):(st?ymd(st.e):null);
@@ -541,7 +550,7 @@ function renderTimeline(start,days,dw,lw,isWeek){
       if(st==="now"||st==="wait"||st==="late")b.appendChild(el("span","sd "+st));
       if(x.t.id)b.appendChild(el("span","bid",x.t.id));
       b.appendChild(el("span","btx",x.t.title));
-      b.title=(x.t.id?x.t.id+" · ":"")+x.t.title+" — "+LABEL[st]+(x.t.dueText?" · строк "+x.t.dueText:"");
+      b.title=(x.t.id?x.t.id+" · ":"")+x.t.title+" — "+LABEL[st]+(x.t.due?" · строк "+fmt(new Date(x.t.due),{day:"numeric",month:"short"}):(x.t.dueText?" · строк "+x.t.dueText:""));
       b.onclick=()=>openSheet(x.t);
       tr.appendChild(b);
     });
@@ -584,7 +593,7 @@ function todoRow(t,day,grouped,onPick){
 function renderDay(){
   const host=document.getElementById("view");host.innerHTML="";
   const day=S.cursor, today=dayStart(new Date()), isToday=same(day,today);
-  const vis=visible().slice().sort((a,b)=>sortKey(a)-sortKey(b));
+  const vis=visible().slice().sort((a,b)=>dateOf(a)-dateOf(b)||sortKey(a)-sortKey(b));
   const dueToday=vis.filter(t=>t.due&&same(new Date(t.due),day));
   const late=isToday?vis.filter(t=>status(t)==="late"&&!same(new Date(t.due),day)):[];
   const ongoing=vis.filter(t=>{if(t.complete||dueToday.includes(t)||late.includes(t))return false;const sp=span(t);return sp.s<=day&&sp.e>day;});
@@ -782,7 +791,7 @@ function openSheet(t){
   const dl=el("dl");
   const row=(k,v)=>{if(!v)return;dl.appendChild(el("dt",null,k));dl.appendChild(el("dd",null,v));};
   row("Відповідальний",t.owner+(role(t.owner)?" · "+role(t.owner):""));
-  row("Строк",t.dueText||(t.due?fmt(new Date(t.due),{day:"numeric",month:"long"}):"—"));
+  row("Строк",t.due?fmt(new Date(t.due),{day:"numeric",month:"long"}):(t.dueText||"—"));
   row("Результат",t.result);row("Залежить від",t.deps);
   row("Чиє рішення потрібне",t.blockers.join(", "));
   row("Статус в описі",t.statusText);
